@@ -1,0 +1,372 @@
+🚀 Plano Tático — 3 Dias para Entrega (Backend First)
+
+📅 SEGUNDA-FEIRA: Fundação (Base Sólida)
+
+🌅 Manhã - Setup (9h-12h):
+1. [30min] Inicializar projeto
+   - Criar estrutura de pastas
+   - Setup TypeScript + ESLint
+   - Instalar dependências base
+
+2. [30min] Setup Docker (OBRIGATÓRIO)
+   - Criar Dockerfile
+   - Configurar docker-compose.yml
+   - Testar build local
+
+3. [30min] Releitura do Protótipo Figma (OBRIGATÓRIO)
+   - Analisar protótipo original
+   - Criar nova versão melhorada
+   - Documentar mudanças de UX/UI
+
+4. [1h] Setup Supabase
+   - Criar projeto
+   - Configurar tabelas
+   - Implementar índices
+   - Testar conexão
+
+5. [1h] Estrutura Base
+   - Configurar Fastify
+   - Implementar error handling
+   - Criar estrutura de módulos
+   - Setup básico de auth
+
+🌇 Tarde - Core Features (14h-18h):
+1. [2h] Implementar Autenticação
+   - Login/Registro básico
+   - Middleware de auth
+   - Rotas protegidas
+   - Testes unitários do UserService (/tests/unit/users/service.test.ts)
+
+2. [2h] Clock Module Base
+   - Repository layer
+   - Service layer básico
+   - Controllers base
+   - Testes unitários do ClockService (/tests/unit/clock/service.test.ts)
+
+📅 TERÇA-FEIRA: Funcionalidades Core
+
+🌅 Manhã - Features Essenciais (9h-12h):
+1. [1.5h] Clock-in/Clock-out
+   - Implementar registro de ponto
+   - Validações básicas
+   - Atualizar testes unitários conforme novas funcionalidades
+
+2. [1.5h] Consultas Essenciais
+   - Status atual
+   - Horas do dia
+   - Histórico básico
+
+🌇 Tarde - Regras de Negócio (14h-18h):
+1. [2h] Validações e Regras
+   - Impedir múltiplos turnos
+   - Validar horários
+   - Calcular horas trabalhadas
+
+2. [2h] Testes de Integração
+   - Testar fluxos principais
+   - Validar regras de negócio
+   - Corrigir bugs encontrados
+
+📅 QUARTA-FEIRA: Polish e Entrega
+
+🌅 Manhã - Frontend Start (9h-12h):
+1. [3h] Setup Frontend
+   - Criar projeto React
+   - Implementar telas base
+   - Conectar com API
+
+🌇 Tarde - Finalização (14h-18h):
+1. [2h] Deploy
+   - Backend no Render
+   - Frontend na Vercel
+   - Testar em produção
+
+2. [2h] Documentação e Polish
+   - README completo
+   - Documentação SOLID
+   - Últimos ajustes
+   - Teste final
+
+🎯 Prioridades Absolutas:
+1. ⭐️ Clock-in/out funcionando
+2. ⭐️ Cálculo correto de horas
+3. ⭐️ Autenticação básica
+4. ⭐️ Frontend utilizável
+5. ⭐️ Deploy funcionando
+6. ⭐️ Docker configurado (OBRIGATÓRIO)
+7. ⭐️ Releitura do Figma (OBRIGATÓRIO)
+
+🏗️ Estrutura Simplificada:
+```
+/src
+├── modules/
+│   ├── users/
+│   │   ├── controller.ts  # Login/registro
+│   │   ├── service.ts     # Lógica de auth
+│   │   └── repository.ts  # DB queries
+│   └── clock/
+│       ├── controller.ts  # Endpoints
+│       ├── service.ts     # Regras de negócio
+│       └── repository.ts  # DB queries
+├── middlewares/
+│   └── auth.ts           # JWT validation
+└── utils/
+    └── date.ts          # Helpers de data
+
+# Arquivos Docker (OBRIGATÓRIOS)
+/Dockerfile
+/docker-compose.yml
+/.dockerignore
+```
+
+📝 Regras Mínimas Viáveis:
+1. Um usuário só pode ter um turno aberto
+2. Clock-out sempre após clock-in
+3. Calcular horas do dia corretamente
+4. Autenticação básica funcionando
+5. Frontend responsivo e usável
+
+🎨 Frontend Mínimo:
+1. Tela de login
+2. Dashboard com:
+   - Botão clock-in/out
+   - Horas do dia
+   - Histórico simples
+
+🔧 Stack Final:
+- Backend: Fastify + Supabase
+- Frontend: React + TailwindCSS
+- Deploy: Render + Vercel
+- Containerização: Docker (OBRIGATÓRIO)
+
+⚠️ Observações:
+- Foco em qualidade > quantidade
+- Testar bem o que for entregue
+- Manter código limpo e documentado
+- Priorizar UX nas features essenciais
+
+📝 Regras de Negócio Core:
+
+1. Registro de Ponto
+   - Apenas um turno aberto por vez
+   - Clock-out sempre posterior ao clock-in
+   - Notas opcionais em cada registro
+
+2. Cálculo de Horas
+   - Total calculado no clock-out
+   - Histórico por dia
+   - Status atual do usuário
+
+3. Validações
+   - Verificar turno aberto antes de novo clock-in
+   - Verificar turno existente antes de clock-out
+   - Validar formato de datas/horas
+
+4. Segurança
+   - Autenticação via JWT
+   - Proteção de rotas
+   - Sanitização de inputs
+
+🔧 Stack Tecnológico:
+
+- Runtime: Node.js 18+
+- Framework: Fastify
+- Banco: Supabase (PostgreSQL)
+- Validação: Zod
+- Testes: Vitest + Supertest
+- CI/CD: GitHub Actions
+- Deploy: Render
+- Containerização: Docker (OBRIGATÓRIO)
+
+📦 Estrutura Final:
+
+```
+/src
+├── app.ts                # App Fastify
+├── server.ts             # Server startup
+├── config/              
+│   ├── database.ts      # Supabase config
+│   └── env.ts           # Env vars
+├── modules/             
+│   ├── users/          
+│   │   ├── controller.ts
+│   │   ├── service.ts   
+│   │   ├── repository.ts
+│   │   └── types.ts     
+│   └── clock/          
+│       ├── controller.ts
+│       ├── service.ts   
+│       ├── repository.ts
+│       └── types.ts     
+├── middlewares/
+│   ├── auth.ts
+│   └── error-handler.ts
+├── utils/
+│   ├── date.ts
+│   └── validation.ts
+└── types/
+    └── common.ts
+
+# Arquivos Docker (OBRIGATÓRIOS)
+/Dockerfile
+/docker-compose.yml
+/.dockerignore
+```
+
+🎯 Prioridades por Ordem:
+1. Funcionalidade core de clock-in/out
+2. Cálculo correto de horas
+3. Autenticação e segurança
+4. Consultas e histórico
+5. Documentação e testes
+6. Deploy e CI/CD
+7. Docker configurado (OBRIGATÓRIO)
+8. Releitura do Figma (OBRIGATÓRIO)
+
+✅ Definir Regras de Negócio
+
+Turno é aberto e fechado manualmente.
+
+Só pode existir um turno aberto por vez.
+
+Cálculo de horas com base em clock-in e clock-out.
+
+Histórico por dia.
+
+✅ Modelagem do Banco (Supabase/Postgres)
+
+Tabelas:
+
+users
+
+clock_entries
+
+✅ Setup do Projeto
+
+Node.js + TypeScript
+
+Fastify
+
+Zod (validação)
+
+Supabase Client
+
+Prisma (opcional, mas recomendado se quiser ORM robusto)
+
+ESLint + Prettier + Husky + lint-staged
+
+Vitest + Supertest (testes)
+
+🔧 Fase 2: Arquitetura Base
+Criar estrutura de pastas:
+
+bash
+Copiar
+Editar
+/src
+├── app.ts
+├── server.ts
+├── config/            # Conexões, env
+├── modules/           # Domínios
+│   └── clock/         # clock-entry
+│       ├── controller/
+│       ├── service/
+│       ├── repository/
+│       └── dto/
+├── routes/            # Agrupamento de rotas
+├── middlewares/
+├── utils/
+└── types/
+🏗️ Fase 3: Implementação Funcional (Core)
+Repository Layer (Acesso ao Supabase ou Prisma)
+
+Service Layer (Regras de negócio puras)
+
+Controller Layer (Entrada HTTP, validação)
+
+Routes (Organização modular das rotas)
+
+🧠 Fase 4: Middlewares e Error Handling
+Handler global de erros.
+
+Logs.
+
+Validação.
+
+(Opcional) Autenticação.
+
+🧪 Fase 5: Testes
+Unitários: services isolados.
+
+Integração: endpoints simulando requests reais.
+
+🐳 Fase 6: Infra e Deploy
+Dockerfile
+
+Docker Compose (para local com Supabase)
+
+Deploy Render (backend) + Supabase (DB managed)
+
+🔧 Fase 7: Docker (OBRIGATÓRIO)
+Dockerfile para produção
+
+docker-compose.yml para desenvolvimento
+
+.dockerignore para otimização
+
+🧪 Fase 8: Testes Específicos (OBRIGATÓRIO)
+Testes unitários dos services
+
+Testes de integração dos endpoints
+
+Testes de regras de negócio
+
+Testes de autenticação
+
+🎨 Fase 9: Releitura do Figma (OBRIGATÓRIO)
+Analisar protótipo original
+
+Criar nova versão melhorada
+
+Documentar mudanças de UX/UI
+
+📋 Fase 10: Documentação SOLID (OBRIGATÓRIO)
+S - Single Responsibility Principle
+O - Open/Closed Principle  
+L - Liskov Substitution Principle
+I - Interface Segregation Principle
+D - Dependency Inversion Principle
+
+Documentar como cada princípio foi aplicado no código
+
+Etapas do Projeto Clockwise:
+
+1. Backend (Concluído)
+   - Configuração inicial
+   - Implementação dos módulos (users, clock)
+   - Autenticação JWT
+   - Validações
+   - Testes de integração
+
+2. Testes Unitários
+   - Localização: /tests/unit/
+   - Arquivos a serem testados:
+     * /tests/unit/users/service.test.ts - testes do UserService
+     * /tests/unit/clock/service.test.ts - testes do ClockService
+   - Foco em testar:
+     * Regras de negócio
+     * Validações
+     * Transformações de dados
+     * Casos de erro
+
+3. Frontend (Próxima etapa)
+   - Setup do projeto React
+   - Implementação das telas
+   - Integração com backend
+   - Testes
+
+4. Documentação
+   - API docs
+   - Setup instructions
+   - Deployment guide
+
