@@ -2,7 +2,13 @@
 import { FastifyInstance } from 'fastify'
 import { UserRepository } from './repository'
 import { LoginInput, RegisterInput, AuthResponse } from './types'
-import { PrismaClient } from '../../generated/prisma'
+import { PrismaClient } from '@prisma/client'
+import { InvalidCredentialsError, EmailInUseError } from '../../errors/validation'
+
+interface CustomError extends Error {
+  statusCode?: number
+  code?: string
+}
 
 export class UserService {
   private repository: UserRepository
@@ -13,48 +19,54 @@ export class UserService {
     this.app = app
   }
 
+  private sanitizeUserData(user: { id: string; name: string; email: string }) {
+    return {
+      id: user.id,
+      name: user.name.trim(),
+      email: user.email.toLowerCase()
+    }
+  }
+
   async login(input: LoginInput): Promise<AuthResponse> {
     try {
       const user = await this.repository.findByEmail(input.email)
       
       if (!user) {
-        return {
-          success: false,
-          error: 'auth/invalid-credentials',
-          message: 'Email ou senha inválidos'
-        }
+        throw new InvalidCredentialsError()
       }
 
-      const isValidPassword = await this.repository.validatePassword(user, input.password)
+      const isValid = await this.repository.validatePassword(user, input.password)
       
-      if (!isValidPassword) {
-        return {
-          success: false,
-          error: 'auth/invalid-credentials',
-          message: 'Email ou senha inválidos'
-        }
+      if (!isValid) {
+        throw new InvalidCredentialsError()
       }
 
-      const token = this.app.jwt.sign(
-        { id: user.id, email: user.email },
-        { expiresIn: '7d' }
-      )
+      const sanitizedUser = this.sanitizeUserData(user)
+      const token = this.app.jwt.sign(sanitizedUser)
 
       return {
         success: true,
         token,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email
-        }
+        user: sanitizedUser
       }
     } catch (error) {
-      return {
-        success: false,
-        error: 'auth/unknown',
-        message: 'Erro ao realizar login'
+      this.app.log.error({
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        input: {
+          email: input.email,
+          passwordLength: input.password.length
+        }
+      })
+
+      if (error instanceof InvalidCredentialsError) {
+        throw error
       }
+
+      const authError: CustomError = new Error('Erro ao realizar login')
+      authError.statusCode = 500
+      authError.code = 'auth/unknown'
+      throw authError
     }
   }
 
@@ -63,39 +75,38 @@ export class UserService {
       const existingUser = await this.repository.findByEmail(input.email)
       
       if (existingUser) {
-        return {
-          success: false,
-          error: 'auth/email-in-use',
-          message: 'Email já está em uso'
-        }
+        throw new EmailInUseError()
       }
 
-      const user = await this.repository.create(
-        input.name,
-        input.email,
-        input.password
-      )
+      const user = await this.repository.create(input.name, input.email, input.password)
 
-      const token = this.app.jwt.sign(
-        { id: user.id, email: user.email },
-        { expiresIn: '7d' }
-      )
+      const sanitizedUser = this.sanitizeUserData(user)
+      const token = this.app.jwt.sign(sanitizedUser)
 
       return {
         success: true,
         token,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email
-        }
+        user: sanitizedUser
       }
     } catch (error) {
-      return {
-        success: false,
-        error: 'auth/unknown',
-        message: 'Erro ao realizar cadastro'
+      this.app.log.error({
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        input: {
+          name: input.name,
+          email: input.email,
+          passwordLength: input.password.length
+        }
+      })
+
+      if (error instanceof EmailInUseError) {
+        throw error
       }
+
+      const authError: CustomError = new Error('Erro ao criar usuário')
+      authError.statusCode = 500
+      authError.code = 'auth/unknown'
+      throw authError
     }
   }
 } 

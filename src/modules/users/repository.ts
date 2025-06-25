@@ -1,6 +1,6 @@
-import { hash, compare } from 'bcryptjs'
+import { hash, compare } from 'bcrypt'
 import prisma from '../../config/prisma'
-import { PrismaClient } from '../../generated/prisma'
+import { PrismaClient } from '@prisma/client'
 
 export class UserRepository {
   private prisma: PrismaClient
@@ -22,12 +22,12 @@ export class UserRepository {
       data: {
         name,
         email,
-        passwordHash: hashedPassword
+        password: hashedPassword
       }
     })
   }
 
-  async validatePassword(user: { passwordHash: string }, password: string) {
-    return compare(password, user.passwordHash)
+  async validatePassword(user: { password: string }, password: string) {
+    return compare(password, user.password)
   }
 }

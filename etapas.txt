@@ -69,19 +69,19 @@
 
 📅 QUARTA-FEIRA: Polish e Entrega
 
-🌅 Manhã - Frontend Start (9h-12h):
-1. [3h] Setup Frontend
-   - Criar projeto React
-   - Implementar telas base
-   - Conectar com API
+🌅 Manhã - Frontend e Integração (9h-12h):
+1. [3h] Implementação Frontend + Integração
+   - Seguir plano da Fase 11 (Integração Backend-Frontend)
+   - Focar em features essenciais primeiro
+   - Testar integração em tempo real
 
-🌇 Tarde - Finalização (14h-18h):
+🌇 Tarde - Deploy e Documentação (14h-18h):
 1. [2h] Deploy
    - Backend no Render
    - Frontend na Vercel
    - Testar em produção
 
-2. [2h] Documentação e Polish
+2. [2h] Documentação Final
    - README completo
    - Documentação SOLID
    - Últimos ajustes
@@ -91,10 +91,11 @@
 1. ⭐️ Clock-in/out funcionando
 2. ⭐️ Cálculo correto de horas
 3. ⭐️ Autenticação básica
-4. ⭐️ Frontend utilizável
+4. ⭐️ Frontend integrado e funcional
 5. ⭐️ Deploy funcionando
 6. ⭐️ Docker configurado (OBRIGATÓRIO)
 7. ⭐️ Releitura do Figma (OBRIGATÓRIO)
+8. ⭐️ Documentação completa
 
 🏗️ Estrutura Simplificada:
 ```
@@ -339,6 +340,147 @@ D - Dependency Inversion Principle
 
 Documentar como cada princípio foi aplicado no código
 
+🔄 Fase 12: Integração Backend-Frontend
+
+1. Setup Inicial [1h]
+   - Criar arquivo .env no frontend
+   - Configurar CORS no backend (já feito)
+   - Definir URLs base para cada ambiente:
+     ```
+     DEV: http://localhost:3000
+     TEST: http://localhost:3001
+     PROD: https://api.clockwise.com
+     ```
+
+2. Tipos Compartilhados [30min]
+   - Criar pasta shared/types:
+     ```typescript
+     // auth.types.ts
+     interface LoginPayload {
+       email: string
+       password: string
+     }
+
+     // clock.types.ts
+     interface ClockEntry {
+       id: string
+       clockIn: Date
+       clockOut: Date | null
+       description: string | null
+       status: string
+       totalHours: number | null
+     }
+
+     // api.types.ts
+     interface ApiResponse<T> {
+       success: boolean
+       data?: T
+       error?: string
+       message?: string
+     }
+     ```
+
+3. Serviços de API [2h]
+   - Implementar cliente HTTP (axios):
+     ```typescript
+     // services/api.ts
+     const api = axios.create({
+       baseURL: import.meta.env.VITE_API_URL
+     })
+
+     // Interceptor para token
+     api.interceptors.request.use((config) => {
+       const token = localStorage.getItem('token')
+       if (token) {
+         config.headers.Authorization = `Bearer ${token}`
+       }
+       return config
+     })
+     ```
+
+   - Criar serviços específicos:
+     ```typescript
+     // services/auth.ts
+     login(email, password)
+     register(name, email, password)
+
+     // services/clock.ts
+     clockIn(description?)
+     clockOut()
+     getStatus()
+     getHistory()
+     ```
+
+4. Gerenciamento de Estado [2h]
+   - Configurar React Query:
+     ```typescript
+     // hooks/useClockStatus.ts
+     export function useClockStatus() {
+       return useQuery(['clock-status'], () => 
+         api.get('/clock/status')
+       )
+     }
+
+     // hooks/useClockHistory.ts
+     export function useClockHistory() {
+       return useQuery(['clock-history'], () => 
+         api.get('/clock/history')
+       )
+     }
+     ```
+
+5. Testes de Integração [2h]
+   - Testar fluxos principais:
+     * Login → Clock-in → Status → Clock-out
+     * Registro → Login → Histórico
+   - Validar respostas da API
+   - Testar tratamento de erros
+
+6. Feedback e Loading States [1h]
+   - Implementar toasts para:
+     * Sucesso no clock-in/out
+     * Erros de API
+     * Validações
+   - Loading states em:
+     * Botões de ação
+     * Carregamento de dados
+     * Submissão de formulários
+
+7. Cache e Performance [1h]
+   - Configurar cache do React Query:
+     * Invalidação após clock-in/out
+     * Revalidação periódica do status
+     * Prefetch de dados comuns
+
+8. Testes E2E (Opcional) [2h]
+   - Configurar Cypress
+   - Testar fluxos completos
+   - Validar integração real
+
+📝 Checklist de Integração:
+- [ ] Tipos compartilhados entre back/front
+- [ ] Interceptors configurados
+- [ ] Tratamento de erros
+- [ ] Loading states
+- [ ] Feedback visual
+- [ ] Cache configurado
+- [ ] Testes passando
+
+⚠️ Pontos de Atenção:
+1. Manter consistência nos tipos
+2. Validar tokens JWT
+3. Tratar erros de rede
+4. Feedback claro ao usuário
+5. Performance nas chamadas
+6. Segurança nas requisições
+
+🎯 Métricas de Sucesso:
+1. Tempo de resposta < 300ms
+2. Zero erros não tratados
+3. Cache funcionando
+4. Testes passando
+5. UX fluida sem travamentos
+
 Etapas do Projeto Clockwise:
 
 1. Backend (Concluído)
@@ -359,14 +501,21 @@ Etapas do Projeto Clockwise:
      * Transformações de dados
      * Casos de erro
 
-3. Frontend (Próxima etapa)
+3. Frontend e Integração
    - Setup do projeto React
    - Implementação das telas
-   - Integração com backend
-   - Testes
+   - Integração com backend seguindo plano da Fase 12
+   - Testes de integração
 
-4. Documentação
+4. Deploy
+   - Configuração dos ambientes
+   - Deploy backend e frontend
+   - Testes em produção
+
+5. Documentação
    - API docs
    - Setup instructions
    - Deployment guide
+   - Documentação SOLID
+   - README final
 

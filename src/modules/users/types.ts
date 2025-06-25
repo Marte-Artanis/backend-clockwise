@@ -1,23 +1,11 @@
-import { Type } from '@sinclair/typebox'
-import type { User } from '../../generated/prisma'
+import type { User } from '@prisma/client'
 
-export const loginSchema = Type.Object({
-  email: Type.String({ format: 'email' }),
-  password: Type.String({ minLength: 6 })
-})
-
-export const registerSchema = Type.Object({
-  name: Type.String({ minLength: 3 }),
-  email: Type.String({ format: 'email' }),
-  password: Type.String({ minLength: 6 })
-})
-
-export type LoginInput = {
+export interface LoginInput {
   email: string
   password: string
 }
 
-export type RegisterInput = {
+export interface RegisterInput {
   name: string
   email: string
   password: string
@@ -32,6 +20,4 @@ export type AuthResponse = {
   user?: PublicUser
   error?: string
   message?: string
-}
-
-// Tipos específicos do usuário 
+} 

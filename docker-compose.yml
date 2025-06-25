@@ -1,1 +1,109 @@
- 
+version: '3.8'
+
+services:
+  postgres_dev:
+    image: postgres:latest
+    container_name: clockwise-postgres-dev
+    environment:
+      POSTGRES_USER: clockwise_dev
+      POSTGRES_PASSWORD: clockwise_dev
+      POSTGRES_DB: clockwise_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clockwise_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - clockwise_network
+
+  postgres_test:
+    image: postgres:latest
+    container_name: clockwise-postgres-test
+    environment:
+      POSTGRES_USER: clockwise_test
+      POSTGRES_PASSWORD: clockwise_test
+      POSTGRES_DB: clockwise_test
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clockwise_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - clockwise_network
+
+  postgres_prod:
+    image: postgres:latest
+    container_name: clockwise-postgres-prod
+    environment:
+      POSTGRES_USER: clockwise_prod
+      POSTGRES_PASSWORD: clockwise_prod
+      POSTGRES_DB: clockwise_prod
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clockwise_prod"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - clockwise_network
+
+  api:
+    build: .
+    container_name: clockwise-api
+    ports:
+      - "3333:3333"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - DOCKER_CONTAINER=true
+      - DEV_POSTGRES_USER=clockwise_dev
+      - DEV_POSTGRES_PASSWORD=clockwise_dev
+      - DEV_POSTGRES_DB=clockwise_dev
+      - DEV_POSTGRES_HOST=postgres_dev
+      - DEV_POSTGRES_PORT=5432
+      - TEST_POSTGRES_USER=clockwise_test
+      - TEST_POSTGRES_PASSWORD=clockwise_test
+      - TEST_POSTGRES_DB=clockwise_test
+      - TEST_POSTGRES_HOST=postgres_test
+      - TEST_POSTGRES_PORT=5432
+      - PROD_POSTGRES_USER=clockwise_prod
+      - PROD_POSTGRES_PASSWORD=clockwise_prod
+      - PROD_POSTGRES_DB=clockwise_prod
+      - PROD_POSTGRES_HOST=postgres_prod
+      - PROD_POSTGRES_PORT=5432
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      postgres_dev:
+        condition: service_healthy
+      postgres_test:
+        condition: service_healthy
+      postgres_prod:
+        condition: service_healthy
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: unless-stopped
+    networks:
+      - clockwise_network
+
+networks:
+  clockwise_network:
+    driver: bridge
+
+volumes:
+  postgres_dev_data:
+  postgres_test_data:
+  postgres_prod_data: 

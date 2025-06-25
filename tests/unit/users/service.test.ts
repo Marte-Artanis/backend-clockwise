@@ -1,11 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { UserService } from '../../../src/modules/users/service'
 import { UserRepository } from '../../../src/modules/users/repository'
+import { InvalidCredentialsError, EmailInUseError } from '../../../src/errors/validation'
 
 // Mock do Fastify
 const mockFastify = {
   jwt: {
     sign: vi.fn().mockReturnValue('mock-token')
+  },
+  log: {
+    error: vi.fn()
   }
 }
 
@@ -59,13 +63,10 @@ describe('UserService', () => {
     it('deve retornar erro quando email não existe', async () => {
       mockRepository.findByEmail.mockResolvedValue(null)
 
-      const result = await service.login({
+      await expect(service.login({
         email: 'nonexistent@example.com',
         password: 'password123'
-      })
-
-      expect(result.success).toBe(false)
-      expect(result.error).toBe('auth/invalid-credentials')
+      })).rejects.toThrow(InvalidCredentialsError)
     })
 
     it('deve retornar erro quando senha é inválida', async () => {
@@ -79,13 +80,10 @@ describe('UserService', () => {
       mockRepository.findByEmail.mockResolvedValue(mockUser)
       mockRepository.validatePassword.mockResolvedValue(false)
 
-      const result = await service.login({
+      await expect(service.login({
         email: 'test@example.com',
         password: 'wrong_password'
-      })
-
-      expect(result.success).toBe(false)
-      expect(result.error).toBe('auth/invalid-credentials')
+      })).rejects.toThrow(InvalidCredentialsError)
     })
   })
 
@@ -127,14 +125,59 @@ describe('UserService', () => {
 
       mockRepository.findByEmail.mockResolvedValue(existingUser)
 
-      const result = await service.register({
+      await expect(service.register({
         name: 'New User',
         email: 'existing@example.com',
         password: 'password123'
+      })).rejects.toThrow(EmailInUseError)
+    })
+  })
+
+  describe('token generation', () => {
+    it('deve gerar token com payload correto', async () => {
+      const mockUser = {
+        id: '1',
+        name: 'Test User',
+        email: 'test@example.com',
+        password: 'hashed_password'
+      }
+
+      mockRepository.findByEmail.mockResolvedValue(mockUser)
+      mockRepository.validatePassword.mockResolvedValue(true)
+
+      await service.login({
+        email: 'test@example.com',
+        password: 'password123'
       })
 
-      expect(result.success).toBe(false)
-      expect(result.error).toBe('auth/email-in-use')
+      expect(mockFastify.jwt.sign).toHaveBeenCalledWith({
+        id: mockUser.id,
+        name: mockUser.name,
+        email: mockUser.email
+      })
+    })
+
+    it('deve gerar token com dados sanitizados', async () => {
+      const mockUser = {
+        id: '1',
+        name: '  Test User  ',
+        email: 'TEST@example.com',
+        password: 'hashed_password'
+      }
+
+      mockRepository.findByEmail.mockResolvedValue(mockUser)
+      mockRepository.validatePassword.mockResolvedValue(true)
+
+      await service.login({
+        email: 'test@example.com',
+        password: 'password123'
+      })
+
+      expect(mockFastify.jwt.sign).toHaveBeenCalledWith({
+        id: mockUser.id,
+        name: mockUser.name.trim(),
+        email: mockUser.email.toLowerCase()
+      })
     })
   })
 }) 

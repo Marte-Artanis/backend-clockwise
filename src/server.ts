@@ -1,19 +1,11 @@
 import { buildApp } from './app'
-import { config } from './config/env'
 
-async function start() {
+const start = async () => {
   try {
     const app = await buildApp()
-
-    await app.listen({ 
-      port: config.PORT, 
-      host: '0.0.0.0' 
-    })
-
-    console.log(`🚀 Server running on http://localhost:${config.PORT}`)
-    console.log(`📊 Environment: ${config.NODE_ENV}`)
+    await app.listen({ port: 3333, host: '0.0.0.0' })
   } catch (err) {
-    console.error('❌ Error starting server:', err)
+    console.error(err)
     process.exit(1)
   }
 }

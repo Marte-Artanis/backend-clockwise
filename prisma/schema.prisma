@@ -6,37 +6,36 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id           String       @id @default(uuid())
-  email        String       @unique
-  name         String
-  passwordHash String       @map("password_hash")
-  createdAt    DateTime     @default(now()) @map("created_at")
-  updatedAt    DateTime     @updatedAt @map("updated_at")
-  clockEntries ClockEntry[]
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  clocks    Clock[]
 
   @@map("users")
 }
 
-model ClockEntry {
-  id         String    @id @default(uuid())
-  userId     String    @map("user_id")
-  clockIn    DateTime  @map("clock_in")
-  clockOut   DateTime? @map("clock_out")
-  totalHours Float?    @map("total_hours")
-  notes      String?
-  status     String    @default("open")
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
-  user       User      @relation(fields: [userId], references: [id])
+model Clock {
+  id          String    @id @default(uuid())
+  userId      String
+  clockIn     DateTime
+  clockOut    DateTime?
+  description String?
+  status      String    @default("open")
+  totalHours  Float?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id])
 
-  @@map("clock_entries")
+  @@map("clocks")
 }

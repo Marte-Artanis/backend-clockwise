@@ -1,88 +1,118 @@
-import prisma from '../../config/prisma'
-import { ClockEntry } from './types'
-import { PrismaClient } from '../../generated/prisma'
+import { PrismaClient } from '@prisma/client'
+import { PaginationParams, DateFilter } from './types'
 
 export class ClockRepository {
   private prisma: PrismaClient
 
   constructor(customPrisma?: PrismaClient) {
-    this.prisma = customPrisma || prisma
+    this.prisma = customPrisma || new PrismaClient()
   }
 
-  async findOpenEntry(userId: string): Promise<ClockEntry | null> {
-    return this.prisma.clockEntry.findFirst({
+  async findOpenEntry(userId: string) {
+    return this.prisma.clock.findFirst({
       where: {
         userId,
-        status: 'open'
+        clockOut: null
       }
     })
   }
 
-  async findTodayEntries(userId: string): Promise<ClockEntry[]> {
+  async findTodayEntries(userId: string) {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    return this.prisma.clockEntry.findMany({
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+
+    return this.prisma.clock.findMany({
       where: {
         userId,
         clockIn: {
-          gte: today
+          gte: today,
+          lt: tomorrow
         }
       },
       orderBy: {
-        clockIn: 'desc'
+        clockIn: 'asc'
       }
     })
   }
 
-  async findHistoryEntries(userId: string, limit = 7): Promise<ClockEntry[]> {
-    return this.prisma.clockEntry.findMany({
+  async findHistoryEntries(userId: string, pagination?: PaginationParams, filter?: DateFilter) {
+    const { page = 1, limit = 10 } = pagination || {}
+    const skip = (page - 1) * limit
+
+    let dateFilter = {}
+    if (filter?.start_date) {
+      const startDate = new Date(filter.start_date)
+      startDate.setHours(0, 0, 0, 0)
+
+      dateFilter = {
+        ...dateFilter,
+        clockIn: {
+          gte: startDate
+        }
+      }
+    }
+
+    if (filter?.end_date) {
+      const endDate = new Date(filter.end_date)
+      endDate.setHours(23, 59, 59, 999)
+
+      dateFilter = {
+        ...dateFilter,
+        clockIn: {
+          ...(dateFilter as any).clockIn,
+          lte: endDate
+        }
+      }
+    }
+
+    return this.prisma.clock.findMany({
       where: {
-        userId
+        userId,
+        ...dateFilter
       },
       orderBy: {
         clockIn: 'desc'
       },
+      skip,
       take: limit
     })
   }
 
-  async clockIn(userId: string, notes?: string): Promise<ClockEntry> {
-    return this.prisma.clockEntry.create({
+  async clockIn(userId: string, description: string | null = null) {
+    return this.prisma.clock.create({
       data: {
         userId,
         clockIn: new Date(),
-        notes: notes ?? null,
+        description,
         status: 'open'
       }
     })
   }
 
-  async clockOut(entryId: string): Promise<ClockEntry> {
-    const clockOut = new Date()
-    
-    // Primeiro busca o registro
-    const currentEntry = await this.prisma.clockEntry.findUnique({
+  async clockOut(entryId: string, description: string | null = null) {
+    const now = new Date()
+    const entry = await this.prisma.clock.findUnique({
       where: { id: entryId }
     })
 
-    if (!currentEntry) {
+    if (!entry) {
       throw new Error('Registro não encontrado')
     }
 
-    // Depois atualiza
-    return this.prisma.clockEntry.update({
+    const clockIn = new Date(entry.clockIn)
+    const totalHours = (now.getTime() - clockIn.getTime()) / (1000 * 60 * 60)
+
+    return this.prisma.clock.update({
       where: { id: entryId },
       data: {
-        clockOut,
+        clockOut: now,
+        description: description || entry.description,
         status: 'closed',
-        totalHours: this.calculateHours(currentEntry.clockIn, clockOut)
+        totalHours: Number(totalHours.toFixed(2))
       }
     })
-  }
-
-  private calculateHours(clockIn: Date, clockOut: Date): number {
-    const diffMs = clockOut.getTime() - clockIn.getTime()
-    return Number((diffMs / (1000 * 60 * 60)).toFixed(2))
   }
 } 

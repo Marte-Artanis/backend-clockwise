@@ -1,46 +1,78 @@
 import { Type } from '@sinclair/typebox'
-import type { ClockEntry as PrismaClockEntry } from '../../generated/prisma'
+import { Clock } from '@prisma/client'
 
 // Schema para registro de ponto
-export const clockEntrySchema = Type.Object({
-  notes: Type.Optional(Type.String())
-})
+export const clockEntrySchema = {
+  type: 'object',
+  properties: {
+    description: { 
+      type: 'string',
+      errorMessage: {
+        type: 'Descrição deve ser uma string'
+      }
+    }
+  },
+  additionalProperties: false,
+  errorMessage: {
+    type: 'Corpo da requisição deve ser um objeto',
+    additionalProperties: 'Campos adicionais não são permitidos'
+  }
+} as const
 
 // Tipos para as entradas
-export type ClockEntryInput = {
-  notes?: string
+export interface ClockEntryInput {
+  description?: string
 }
 
 // Tipo para um registro de ponto
-export type ClockEntry = PrismaClockEntry
+export interface ClockEntry {
+  id: string
+  userId: string
+  clockIn: Date
+  clockOut: Date | null
+  description: string | null
+  status: string
+  totalHours: number | null
+  createdAt: Date
+  updatedAt: Date
+}
 
 // Tipo para resposta de status
-export type ClockStatusResponse = {
+export interface ClockStatusResponse {
   success: boolean
-  data?: {
-    current_entry?: PrismaClockEntry
+  data: {
     is_clocked_in: boolean
     today_hours: number
+    current_entry?: ClockEntry | null
   }
-  error?: string
-  message?: string
 }
 
 // Tipo para resposta de histórico
-export type ClockHistoryResponse = {
+export interface ClockHistoryResponse {
   success: boolean
-  data?: {
-    entries: PrismaClockEntry[]
+  data: {
+    entries: ClockEntry[]
     total_hours: number
   }
   error?: string
-  message?: string
 }
 
 // Tipo para resposta de ação (clock-in/out)
 export type ClockActionResponse = {
   success: boolean
-  data?: PrismaClockEntry
+  data?: Clock
   error?: string
   message?: string
+}
+
+// Tipo para paginação
+export interface PaginationParams {
+  page?: number
+  limit?: number
+}
+
+// Tipo para filtro de datas
+export interface DateFilter {
+  start_date?: string
+  end_date?: string
 } 

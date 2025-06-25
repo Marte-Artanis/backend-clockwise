@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config'
-import path from 'path'
+import { resolve } from 'path'
 
 export default defineConfig({
   test: {
@@ -13,14 +13,17 @@ export default defineConfig({
     },
     env: {
       NODE_ENV: 'test',
-      DATABASE_URL: 'file:./test.db',
-      USE_SQLITE: 'true',
-      JWT_SECRET: 'test-secret-key'
+      TEST_POSTGRES_USER: 'clockwise_test',
+      TEST_POSTGRES_PASSWORD: 'clockwise_test',
+      TEST_POSTGRES_DB: 'clockwise_test',
+      TEST_POSTGRES_HOST: 'localhost',
+      TEST_POSTGRES_PORT: '5434',
+      JWT_SECRET: 'test-secret'
     }
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': resolve(__dirname, './src'),
     },
   },
 }) 

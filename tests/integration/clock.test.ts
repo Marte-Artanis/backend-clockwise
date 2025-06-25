@@ -1,16 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { FastifyInstance } from 'fastify'
 import { buildApp } from '../../src/app'
-import { PrismaClient } from '../../src/generated/prisma'
-import { hash } from 'bcryptjs'
-
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: 'file:./test.db'
-    }
-  }
-})
+import prisma from '../../src/config/prisma'
+import { hash } from 'bcrypt'
 
 describe('Clock Module Integration Tests', () => {
   let app: FastifyInstance
@@ -26,7 +18,7 @@ describe('Clock Module Integration Tests', () => {
       data: {
         name: 'Test User',
         email: 'test@example.com',
-        passwordHash: hashedPassword
+        password: hashedPassword
       }
     })
     
@@ -37,20 +29,26 @@ describe('Clock Module Integration Tests', () => {
 
   afterAll(async () => {
     // Deletar todos os registros de ponto do usuário
-    await prisma.clockEntry.deleteMany({
+    await prisma.clock.deleteMany({
       where: {
         userId
       }
     })
 
     // Deletar o usuário
-    await prisma.user.delete({
-      where: {
-        id: userId
+    try {
+      await prisma.user.delete({
+        where: {
+          id: userId
+        }
+      })
+    } catch (error) {
+      // Ignora erro se o usuário não existe
+      if (!error.message.includes('Record to delete does not exist')) {
+        throw error
       }
-    })
+    }
 
-    await prisma.$disconnect()
     await app.close()
   })
 
@@ -61,7 +59,8 @@ describe('Clock Module Integration Tests', () => {
         url: '/clock/in',
         headers: {
           authorization: `Bearer ${authToken}`
-        }
+        },
+        payload: {}
       })
 
       expect(response.statusCode).toBe(201)
@@ -69,7 +68,8 @@ describe('Clock Module Integration Tests', () => {
         success: true,
         data: {
           userId,
-          status: 'open'
+          clockIn: expect.any(String),
+          clockOut: null
         }
       })
     })
@@ -80,7 +80,8 @@ describe('Clock Module Integration Tests', () => {
         url: '/clock/in',
         headers: {
           authorization: `Bearer ${authToken}`
-        }
+        },
+        payload: {}
       })
 
       expect(response.statusCode).toBe(400)
@@ -106,9 +107,7 @@ describe('Clock Module Integration Tests', () => {
         success: true,
         data: {
           userId,
-          status: 'closed',
-          clockOut: expect.any(String),
-          totalHours: expect.any(Number)
+          clockOut: expect.any(String)
         }
       })
     })

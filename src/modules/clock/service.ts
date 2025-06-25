@@ -1,123 +1,121 @@
 import { ClockRepository } from './repository'
-import { ClockEntryInput, ClockStatusResponse, ClockHistoryResponse, ClockActionResponse } from './types'
-import { PrismaClient } from '../../generated/prisma'
+import { ClockEntryInput, ClockStatusResponse, ClockHistoryResponse, ClockActionResponse, PaginationParams, DateFilter } from './types'
+import { PrismaClient } from '@prisma/client'
+import { ClockAlreadyOpenError, NoOpenClockError, InvalidDateError } from '../../errors/validation'
+import { FastifyInstance } from 'fastify'
+
+interface CustomError extends Error {
+  statusCode?: number
+  code?: string
+}
 
 export class ClockService {
   private repository: ClockRepository
+  private app: FastifyInstance
 
-  constructor(customPrisma?: PrismaClient) {
+  constructor(app: FastifyInstance, customPrisma?: PrismaClient) {
     this.repository = new ClockRepository(customPrisma)
+    this.app = app
   }
 
   async getStatus(userId: string): Promise<ClockStatusResponse> {
     try {
-      const [currentEntry, todayEntries] = await Promise.all([
-        this.repository.findOpenEntry(userId),
-        this.repository.findTodayEntries(userId)
-      ])
+      const openEntry = await this.repository.findOpenEntry(userId)
+      const todayEntries = await this.repository.findTodayEntries(userId)
 
-      const todayHours = todayEntries.reduce((total, entry) => {
-        if (entry.totalHours) {
-          return total + entry.totalHours
-        }
-        return total
+      const totalHours = todayEntries.reduce((acc, entry) => {
+        if (!entry.clockOut) return acc
+        const clockIn = new Date(entry.clockIn)
+        const clockOut = new Date(entry.clockOut)
+        const hours = (clockOut.getTime() - clockIn.getTime()) / (1000 * 60 * 60)
+        return acc + hours
       }, 0)
 
       return {
         success: true,
         data: {
-          ...(currentEntry ? { current_entry: currentEntry } : {}),
-          is_clocked_in: !!currentEntry,
-          today_hours: Number(todayHours.toFixed(2))
+          is_clocked_in: !!openEntry,
+          today_hours: totalHours,
+          current_entry: openEntry
         }
       }
     } catch (error) {
-      return {
-        success: false,
-        error: 'clock/unknown',
-        message: 'Erro ao buscar status do ponto'
-      }
+      this.app.log.error(error)
+      throw error
     }
   }
 
-  async getHistory(userId: string): Promise<ClockHistoryResponse> {
+  async getHistory(userId: string, pagination?: PaginationParams, filter?: DateFilter): Promise<ClockHistoryResponse> {
     try {
-      const entries = await this.repository.findHistoryEntries(userId)
-      
-      const totalHours = entries.reduce((total, entry) => {
-        if (entry.totalHours) {
-          return total + entry.totalHours
-        }
-        return total
+      // Validar datas
+      if (filter?.start_date && isNaN(Date.parse(filter.start_date))) {
+        throw new InvalidDateError('Data inicial inválida')
+      }
+
+      if (filter?.end_date && isNaN(Date.parse(filter.end_date))) {
+        throw new InvalidDateError('Data final inválida')
+      }
+
+      const entries = await this.repository.findHistoryEntries(userId, pagination, filter)
+
+      const totalHours = entries.reduce((acc, entry) => {
+        if (!entry.clockOut) return acc
+        const clockIn = new Date(entry.clockIn)
+        const clockOut = new Date(entry.clockOut)
+        const hours = (clockOut.getTime() - clockIn.getTime()) / (1000 * 60 * 60)
+        return acc + hours
       }, 0)
 
       return {
         success: true,
         data: {
           entries,
-          total_hours: Number(totalHours.toFixed(2))
+          total_hours: totalHours
         }
       }
     } catch (error) {
-      return {
-        success: false,
-        error: 'clock/unknown',
-        message: 'Erro ao buscar histórico de ponto'
-      }
+      this.app.log.error(error)
+      throw error
     }
   }
 
-  async clockIn(userId: string, input?: ClockEntryInput): Promise<ClockActionResponse> {
+  async clockIn(userId: string, input: ClockEntryInput): Promise<ClockActionResponse> {
     try {
       const openEntry = await this.repository.findOpenEntry(userId)
-      
+
       if (openEntry) {
-        return {
-          success: false,
-          error: 'clock/already-open',
-          message: 'Já existe um registro de ponto aberto'
-        }
+        throw new ClockAlreadyOpenError()
       }
 
-      const entry = await this.repository.clockIn(userId, input?.notes)
+      const entry = await this.repository.clockIn(userId, input.description)
 
       return {
         success: true,
         data: entry
       }
     } catch (error) {
-      return {
-        success: false,
-        error: 'clock/unknown',
-        message: 'Erro ao registrar entrada'
-      }
+      this.app.log.error(error)
+      throw error
     }
   }
 
-  async clockOut(userId: string): Promise<ClockActionResponse> {
+  async clockOut(userId: string, input: ClockEntryInput = {}): Promise<ClockActionResponse> {
     try {
       const openEntry = await this.repository.findOpenEntry(userId)
-      
+
       if (!openEntry) {
-        return {
-          success: false,
-          error: 'clock/no-open-entry',
-          message: 'Não existe um registro de ponto aberto'
-        }
+        throw new NoOpenClockError()
       }
 
-      const entry = await this.repository.clockOut(openEntry.id)
+      const entry = await this.repository.clockOut(openEntry.id, input.description)
 
       return {
         success: true,
         data: entry
       }
     } catch (error) {
-      return {
-        success: false,
-        error: 'clock/unknown',
-        message: 'Erro ao registrar saída'
-      }
+      this.app.log.error(error)
+      throw error
     }
   }
 } 

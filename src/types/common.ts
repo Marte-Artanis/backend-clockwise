@@ -57,4 +57,40 @@ export interface CreateClockEntryRequest {
 
 export interface UpdateClockEntryRequest {
   notes?: string
+}
+
+export const errorResponseSchema = {
+  type: 'object',
+  properties: {
+    success: { type: 'boolean', default: false },
+    error: { type: 'string' },
+    message: { type: 'string' },
+    errors: {
+      type: 'object',
+      additionalProperties: {
+        type: 'array',
+        items: { type: 'string' }
+      }
+    }
+  }
+} as const
+
+export const successResponseSchema = {
+  type: 'object',
+  properties: {
+    success: { type: 'boolean', default: true },
+    data: { type: 'object', additionalProperties: true }
+  }
+} as const
+
+export interface CustomError extends Error {
+  statusCode?: number
+  code?: string
+  validation?: Array<{
+    keyword: string
+    instancePath?: string
+    schemaPath?: string
+    params?: Record<string, any>
+    message?: string
+  }>
 } 
