@@ -115,4 +115,19 @@ export class ClockRepository {
       }
     })
   }
+
+  async findEntriesBetweenDates(userId: string, start: Date, end: Date) {
+    return this.prisma.clock.findMany({
+      where: {
+        userId,
+        clockIn: {
+          gte: start,
+          lt: end
+        }
+      },
+      orderBy: {
+        clockIn: 'asc'
+      }
+    })
+  }
 } 

@@ -19,11 +19,13 @@ export class UserService {
     this.app = app
   }
 
-  private sanitizeUserData(user: { id: string; name: string; email: string }) {
+  private sanitizeUserData(user: { id: string; name: string; email: string; createdAt: Date; updatedAt: Date }) {
     return {
       id: user.id,
       name: user.name.trim(),
-      email: user.email.toLowerCase()
+      email: user.email.toLowerCase(),
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
     }
   }
 

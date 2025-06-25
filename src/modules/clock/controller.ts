@@ -36,6 +36,16 @@ export async function clockRoutes(app: FastifyInstance) {
 
   app.get('/clock/history', {
     schema: {
+      querystring: {
+        type: 'object',
+        properties: {
+          page: { type: 'integer', minimum: 1 },
+          limit: { type: 'integer', minimum: 1 },
+          start_date: { type: 'string' },
+          end_date: { type: 'string' }
+        },
+        additionalProperties: false
+      },
       response: {
         200: successResponseSchema,
         400: errorResponseSchema
@@ -44,7 +54,10 @@ export async function clockRoutes(app: FastifyInstance) {
   }, async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       const { id: userId } = getUserFromToken(request)
-      const result = await service.getHistory(userId)
+      const { page, limit, start_date, end_date } = request.query as any
+      const pagination = page || limit ? { page: Number(page) || 1, limit: Number(limit) || 10 } : undefined
+      const filter = (start_date || end_date) ? { start_date, end_date } : undefined
+      const result = await service.getHistory(userId, pagination, filter)
       return reply.send(result)
     } catch (error) {
       app.log.error({
@@ -110,6 +123,61 @@ export async function clockRoutes(app: FastifyInstance) {
         error: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined
       })
+      throw error
+    }
+  })
+
+  // Estatísticas de horas
+  app.get('/clock/today', {
+    schema: {
+      response: {
+        200: successResponseSchema,
+        400: errorResponseSchema
+      }
+    }
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { id: userId } = getUserFromToken(request)
+      const result = await service.getTodayStats(userId)
+      return reply.send(result)
+    } catch (error) {
+      app.log.error(error)
+      throw error
+    }
+  })
+
+  app.get('/clock/week', {
+    schema: {
+      response: {
+        200: successResponseSchema,
+        400: errorResponseSchema
+      }
+    }
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { id: userId } = getUserFromToken(request)
+      const result = await service.getWeekStats(userId)
+      return reply.send(result)
+    } catch (error) {
+      app.log.error(error)
+      throw error
+    }
+  })
+
+  app.get('/clock/month', {
+    schema: {
+      response: {
+        200: successResponseSchema,
+        400: errorResponseSchema
+      }
+    }
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { id: userId } = getUserFromToken(request)
+      const result = await service.getMonthStats(userId)
+      return reply.send(result)
+    } catch (error) {
+      app.log.error(error)
       throw error
     }
   })

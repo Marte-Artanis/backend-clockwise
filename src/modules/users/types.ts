@@ -11,7 +11,7 @@ export interface RegisterInput {
   password: string
 }
 
-export type PublicUser = Pick<User, 'id' | 'name' | 'email'>
+export type PublicUser = Pick<User, 'id' | 'name' | 'email' | 'createdAt' | 'updatedAt'>
 
 // Tipo para resposta de autenticação
 export type AuthResponse = {
