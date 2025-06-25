@@ -1,4 +1,3 @@
-import { Type } from '@sinclair/typebox'
 import { Clock } from '@prisma/client'
 
 // Schema para registro de ponto

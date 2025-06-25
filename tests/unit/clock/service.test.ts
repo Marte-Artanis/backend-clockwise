@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ClockService } from '../../../src/modules/clock/service'
-import { ClockRepository } from '../../../src/modules/clock/repository'
 import type { ClockEntry } from '../../../src/modules/clock/types'
 import { ClockAlreadyOpenError, NoOpenClockError, InvalidDateError } from '../../../src/errors/validation'
+import type { FastifyInstance } from 'fastify'
 
 const mockRepository = {
   findOpenEntry: vi.fn(),
@@ -33,7 +33,7 @@ describe('ClockService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    service = new ClockService(mockFastify as any)
+    service = new ClockService(mockFastify as unknown as FastifyInstance)
   })
 
   describe('getStatus', () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { UserService } from '../../../src/modules/users/service'
-import { UserRepository } from '../../../src/modules/users/repository'
+import type { FastifyInstance } from 'fastify'
 import { InvalidCredentialsError, EmailInUseError } from '../../../src/errors/validation'
 
 // Mock do Fastify
@@ -31,7 +31,7 @@ describe('UserService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    service = new UserService(mockFastify as any)
+    service = new UserService(mockFastify as unknown as FastifyInstance)
   })
 
   describe('login', () => {

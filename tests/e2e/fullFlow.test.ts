@@ -8,9 +8,30 @@ const timestamp = Date.now()
 const email = `e2e_${timestamp}@example.com`
 const password = 'e2e123456'
 
-let app: FastifyInstance
+let app!: FastifyInstance
 let authToken: string
 let userId: string
+
+interface AuthResponse {
+  success: boolean
+  token: string
+  user: {
+    id: string
+    name: string
+    email: string
+  }
+}
+
+interface ClockEntryResponse {
+  success: boolean
+  data: {
+    id: string
+    userId: string
+    clockIn: string | Date
+    clockOut: string | Date | null
+    totalHours: number | null
+  }
+}
 
 beforeAll(async () => {
   app = await buildApp(prisma)
@@ -42,7 +63,7 @@ describe('E2E - Register → Login → Clock In/Out', () => {
     })
 
     expect(registerResponse.statusCode).toBe(201)
-    const registerBody = registerResponse.json() as any
+    const registerBody = registerResponse.json() as AuthResponse
     expect(registerBody.success).toBe(true)
     authToken = registerBody.token
     userId = registerBody.user.id
@@ -55,7 +76,7 @@ describe('E2E - Register → Login → Clock In/Out', () => {
     })
 
     expect(loginResponse.statusCode).toBe(200)
-    const loginBody = loginResponse.json() as any
+    const loginBody = loginResponse.json() as AuthResponse
     expect(loginBody.success).toBe(true)
     // Usa token mais recente
     authToken = loginBody.token
@@ -71,7 +92,7 @@ describe('E2E - Register → Login → Clock In/Out', () => {
     })
 
     expect(clockInResponse.statusCode).toBe(201)
-    const clockInBody = clockInResponse.json() as any
+    const clockInBody = clockInResponse.json() as ClockEntryResponse
     expect(clockInBody.success).toBe(true)
     expect(clockInBody.data.userId).toBe(userId)
 
@@ -86,7 +107,7 @@ describe('E2E - Register → Login → Clock In/Out', () => {
     })
 
     expect(clockOutResponse.statusCode).toBe(200)
-    const clockOutBody = clockOutResponse.json() as any
+    const clockOutBody = clockOutResponse.json() as ClockEntryResponse
     expect(clockOutBody.success).toBe(true)
     expect(clockOutBody.data.userId).toBe(userId)
   })

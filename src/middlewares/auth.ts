@@ -20,7 +20,8 @@ export async function authenticate(request: FastifyRequest, reply: FastifyReply)
     }
 
     await request.jwtVerify()
-  } catch (err) {
+  } catch (_err) {
+    console.error(_err)
     return reply.status(401).send({
       success: false,
       error: 'Unauthorized',

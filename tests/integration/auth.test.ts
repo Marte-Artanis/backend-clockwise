@@ -5,7 +5,6 @@ import prisma from '../../src/config/prisma'
 
 // Emails únicos (timestamp garante unicidade durante a execução)
 const timestamp = Date.now()
-const primaryEmail = `test_${timestamp}@example.com`
 const secondaryEmail = `test_${timestamp}+1@example.com`
 const nonExistentEmail = `test_${timestamp}+2@example.com`
 

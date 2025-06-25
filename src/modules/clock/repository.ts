@@ -42,7 +42,7 @@ export class ClockRepository {
     const { page = 1, limit = 10 } = pagination || {}
     const skip = (page - 1) * limit
 
-    let dateFilter = {}
+    let dateFilter: { clockIn?: { gte?: Date; lte?: Date } } = {}
     if (filter?.start_date) {
       const startDate = new Date(filter.start_date)
       startDate.setHours(0, 0, 0, 0)
@@ -62,7 +62,7 @@ export class ClockRepository {
       dateFilter = {
         ...dateFilter,
         clockIn: {
-          ...(dateFilter as any).clockIn,
+          ...(dateFilter.clockIn ?? {}),
           lte: endDate
         }
       }

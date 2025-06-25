@@ -15,7 +15,7 @@ interface CustomError extends Error {
     keyword: string
     instancePath?: string
     schemaPath?: string
-    params?: Record<string, any>
+    params?: Record<string, unknown>
     message?: string
   }>
 }
@@ -68,7 +68,7 @@ export async function buildApp(customPrisma?: PrismaClient) {
       const validationError = error.validation[0]
       let errorCode = 'validation/error'
       let errorMessage = validationError?.message || 'Validation error'
-      let statusCode = 400
+      const statusCode = 400
 
       // Map validation errors to specific error codes
       if (validationError?.keyword === 'format' && validationError?.params && validationError.params['format'] === 'email') {

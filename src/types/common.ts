@@ -1,4 +1,4 @@
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean
   data?: T
   error?: string
@@ -90,7 +90,7 @@ export interface CustomError extends Error {
     keyword: string
     instancePath?: string
     schemaPath?: string
-    params?: Record<string, any>
+    params?: Record<string, unknown>
     message?: string
   }>
 } 

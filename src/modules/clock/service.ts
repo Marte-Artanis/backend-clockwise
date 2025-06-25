@@ -4,11 +4,6 @@ import { PrismaClient } from '@prisma/client'
 import { ClockAlreadyOpenError, NoOpenClockError, InvalidDateError } from '../../errors/validation'
 import { FastifyInstance } from 'fastify'
 
-interface CustomError extends Error {
-  statusCode?: number
-  code?: string
-}
-
 export class ClockService {
   private repository: ClockRepository
   private app: FastifyInstance

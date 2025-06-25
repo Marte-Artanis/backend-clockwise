@@ -1,8 +1,8 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { ClockService } from './service'
-import { clockEntrySchema, ClockEntryInput } from './types'
+import { ClockEntryInput } from './types'
 import { authenticate, getUserFromToken } from '../../middlewares/auth'
-import { CustomError, errorResponseSchema, successResponseSchema } from '../../types/common'
+import { errorResponseSchema, successResponseSchema } from '../../types/common'
 
 export async function clockRoutes(app: FastifyInstance) {
   if (!app.prisma) {
@@ -51,12 +51,17 @@ export async function clockRoutes(app: FastifyInstance) {
         400: errorResponseSchema
       }
     }
-  }, async (request: FastifyRequest, reply: FastifyReply) => {
+  }, async (request: FastifyRequest<{ Querystring: { page?: number; limit?: number; start_date?: string; end_date?: string } }>, reply: FastifyReply) => {
     try {
       const { id: userId } = getUserFromToken(request)
-      const { page, limit, start_date, end_date } = request.query as any
+      const { page, limit, start_date, end_date } = request.query
       const pagination = page || limit ? { page: Number(page) || 1, limit: Number(limit) || 10 } : undefined
-      const filter = (start_date || end_date) ? { start_date, end_date } : undefined
+      const filter = (start_date || end_date)
+        ? {
+            ...(start_date ? { start_date } : {}),
+            ...(end_date ? { end_date } : {})
+          }
+        : undefined
       const result = await service.getHistory(userId, pagination, filter)
       return reply.send(result)
     } catch (error) {

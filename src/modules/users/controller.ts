@@ -2,7 +2,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { UserService } from './service'
 import { LoginInput, RegisterInput } from './types'
-import { errorResponseSchema, successResponseSchema } from '../../types/common'
+import { errorResponseSchema } from '../../types/common'
 
 const userResponseSchema = {
           type: 'object',
