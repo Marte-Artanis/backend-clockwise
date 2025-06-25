@@ -111,7 +111,7 @@ export class ClockRepository {
         clockOut: now,
         description: description || entry.description,
         status: 'closed',
-        totalHours: Number(totalHours.toFixed(2))
+        totalHours: Number(totalHours.toFixed(4))
       }
     })
   }
