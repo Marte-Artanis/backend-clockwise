@@ -113,5 +113,9 @@ Keeping backend and frontend isolated offers advantages:
 
 The shared `docker-compose.yml` inside **backend-clockwise** makes local integration trivial: when both repos are placed side-by-side, one command (`docker compose up`) starts the entire stack.
 
+## 🎨 Figma Prototype
+A responsive redesign of the Clockwise interface can be viewed on Figma:
+<https://www.figma.com/design/MJFWFugjID3qZcTQgqvK8I/ClockWise?m=auto&t=sdVGOBTL3CpBElLL-6>
+
 ---
 Made with ♥ for the Ilumeo Data Science challenge.
