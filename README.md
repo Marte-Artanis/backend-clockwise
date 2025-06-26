@@ -1,291 +1,117 @@
-# 🕒 Clockwise API — Controle de Ponto
+# 🕒 Clockwise API — Backend
 
-API REST para controle de ponto de colaboradores, construída com Node.js, Fastify e Supabase. Arquitetura limpa, escalável, seguindo princípios SOLID e Clean Architecture.
+REST API built with **Node.js**, **Fastify**, **Prisma** and **PostgreSQL**. Provides endpoints for user management and working-hours tracking.
 
----
+## ✨ Tech Stack
+* Fastify + TypeScript
+* Prisma ORM
+* PostgreSQL (via Docker)
+* AJV for schema validation
+* Vitest + Supertest for automated tests
+* ESLint (flat-config) & Prettier
 
-## 🚀 Tecnologias Utilizadas
-
-- Node.js + TypeScript
-- Fastify
-- Supabase (PostgreSQL)
-- Zod (validação)
-- Vitest + Supertest (testes)
-- ESLint + Prettier + Husky + lint-staged
-- **Docker** (containerização)
-
----
-
-## 🏗️ Arquitetura do Projeto
-
-```
-/src
-├── app.ts                # Configuração do Fastify
-├── server.ts             # Inicialização do servidor
-├── config/              
-│   ├── database.ts      # Configuração Supabase
-│   └── env.ts           # Variáveis de ambiente
-├── modules/             
-│   ├── users/          
-│   │   ├── controller.ts
-│   │   ├── service.ts   
-│   │   ├── repository.ts
-│   │   └── types.ts     
-│   └── clock/          
-│       ├── controller.ts
-│       ├── service.ts   
-│       ├── repository.ts
-│       └── types.ts     
-├── middlewares/
-│   ├── auth.ts
-│   └── error-handler.ts
-├── utils/
-│   ├── date.ts
-│   └── validation.ts
-└── types/
-    └── common.ts
-
-# Arquivos Docker
-/Dockerfile
-/docker-compose.yml
-/.dockerignore
-```
-
----
-
-## 🗄️ Estrutura do Banco de Dados (Supabase)
-
-### 🔹 users
-| Campo          | Tipo       | Descrição              | Constraints    |
-|----------------|------------|------------------------|----------------|
-| id             | UUID       | Identificador único    | PK            |
-| name           | VARCHAR    | Nome do colaborador    | NOT NULL      |
-| email          | VARCHAR    | Email único            | UNIQUE        |
-| password_hash   | VARCHAR    | Senha criptografada    | NOT NULL      |
-| active         | BOOLEAN    | Status do usuário      | DEFAULT true  |
-| created_at     | TIMESTAMP  | Data de criação        | DEFAULT now() |
-| updated_at     | TIMESTAMP  | Data de atualização    | DEFAULT now() |
-
-### 🔹 clock_entries
-| Campo        | Tipo       | Descrição                    | Constraints    |
-|--------------|------------|------------------------------|----------------|
-| id           | UUID       | Identificador único          | PK            |
-| user_id      | UUID       | Referência ao usuário        | FK            |
-| clock_in     | TIMESTAMP  | Horário de início do turno   | NOT NULL      |
-| clock_out    | TIMESTAMP  | Horário de fim do turno      | NULL          |
-| total_hours  | INTERVAL   | Horas trabalhadas no turno   | NULL          |
-| status       | VARCHAR    | Status do registro           | CHECK ('open','closed') |
-| notes        | VARCHAR    | Observações/justificativas   | NULL          |
-| created_at   | TIMESTAMP  | Registro criado             | DEFAULT now() |
-| updated_at   | TIMESTAMP  | Registro atualizado         | DEFAULT now() |
-
-🔗 Relações e Índices:
-- FK: `clock_entries.user_id` → `users.id`
-- IDX: `users(email)`
-- IDX: `clock_entries(user_id, clock_in)`
-- IDX: `clock_entries(status)`
-
----
-
-## 🔥 Endpoints da API
-
-### 👤 Autenticação
-```
-POST   /auth/login       # Login do usuário
-POST   /auth/logout      # Logout do usuário
-```
-
-### ⏰ Controle de Ponto
-```
-POST   /clock/in         # Registrar entrada
-POST   /clock/out        # Registrar saída
-GET    /clock/status     # Status atual do usuário
-GET    /clock/today      # Horas do dia atual
-GET    /clock/history    # Histórico de registros
-```
-
----
-
-## 🏃‍♂️ Como rodar localmente
-
-### 🔧 Pré-requisitos
-
-- Node.js >=18
-- Docker e Docker Compose
-- Conta no Supabase
-- pnpm (recomendado) ou npm
-
-### 📦 Variáveis de Ambiente
-```env
-SUPABASE_URL=https://seu-projeto.supabase.co
-SUPABASE_KEY=sua-chave-service-role
-JWT_SECRET=seu-secret-jwt
-NODE_ENV=development
-PORT=3000
-```
-
-### 🚀 Instalação e Execução
-
-#### Opção 1: Desenvolvimento Local
+## 📦 Getting Started
+### 1. Clone both repositories
 ```bash
-# Instalar dependências
-pnpm install
-
-# Desenvolvimento
-pnpm dev
-
-# Testes
-pnpm test
-
-# Build
-pnpm build
+git clone https://github.com/Marte-Artanis/backend-clockwise.git   # API
+git clone https://github.com/Marte-Artanis/clockwise-frontend.git  # SPA
 ```
 
-#### Opção 2: Docker (Recomendado)
+### 2. Run with Docker Compose (recommended)
+Inside the **clockwise-api** directory run:
 ```bash
-# Desenvolvimento com Docker
-docker-compose up --build
-
-# Produção
-docker build -t clockwise-api .
-docker run -p 3000:3000 clockwise-api
+docker compose up --build
 ```
+This will build the API, the frontend (using `../clockwise-web` as context) and three Postgres databases.
 
-### 🐳 Docker
-
-#### Dockerfile
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-RUN npm run build
-EXPOSE 3000
-CMD ["npm", "start"]
-```
-
-#### docker-compose.yml
-```yaml
-version: '3.8'
-services:
-  api:
-    build: .
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-    volumes:
-      - .:/app
-      - /app/node_modules
-```
-
----
-
-## 📝 Scripts Disponíveis
-
-| Comando      | Descrição                          |
-|--------------|-----------------------------------|
-| pnpm dev     | Inicia em modo desenvolvimento    |
-| pnpm build   | Build para produção              |
-| pnpm start   | Inicia em produção               |
-| pnpm test    | Executa testes                   |
-| pnpm lint    | Verifica código                  |
-| pnpm format  | Formata código                   |
-
----
-
-## 🧪 Testes
-
-### Estrutura de Testes
-```
-/tests
-├── unit/
-│   ├── services/
-│   └── utils/
-├── integration/
-│   ├── auth.test.ts
-│   └── clock.test.ts
-└── e2e/
-    └── api.test.ts
-```
-
-### Tipos de Testes
-- **Unitários**: Services isolados, regras de negócio
-- **Integração**: Endpoints, autenticação
-- **E2E**: Fluxos completos da aplicação
-
-### Executar Testes
+### 3. Local development without Docker
 ```bash
-# Todos os testes
-pnpm test
+npm install              # install deps
+cp env.example .env      # create environment file
+npm run dev              # starts Fastify with nodemon
+```
+The server will watch for file changes and reload.
 
-# Testes unitários
-pnpm test:unit
+### Running Tests
+```bash
+npm test            # unit + integration + e2e
+```
+The test suite spins up a separate Postgres container and runs migrations automatically.
 
-# Testes de integração
-pnpm test:integration
+## 🔐 Environment Variables
+All variables live in `.env`. Below are the most common ones (see `env.example` for the full list):
 
-# Cobertura
-pnpm test:coverage
+| Key | Description | Default |
+|-----|-------------|---------|
+| NODE_ENV | Environment name | development |
+| JWT_SECRET | Token secret | **required** |
+| DEV_POSTGRES_* | Credentials for dev database | clockwise_dev / … |
+| TEST_POSTGRES_* | Credentials for test database | clockwise_test / … |
+| PROD_POSTGRES_* | Credentials for prod database | clockwise_prod / … |
+
+`DATABASE_URL` is composed automatically based on the selected `NODE_ENV`.
+
+## 🌐 Available Endpoints
+| Method | Path | Purpose |
+|--------|------|---------|
+| POST | /auth/register | Register new user |
+| POST | /auth/login | User login (JWT) |
+| GET | /clock/status | Current status + today hours |
+| POST | /clock/in | Clock-in (start shift) |
+| POST | /clock/out | Clock-out (end shift) |
+| GET | /clock/today | Total hours for current day |
+| GET | /clock/week | Total hours for current week |
+| GET | /clock/month | Total hours for current month |
+| GET | /clock/history | Paginated history, filters | 
+| GET | /health | Liveness probe |
+
+All routes (except `/health` and auth) require `Authorization: Bearer <token>` header.
+
+## 🛠️ Useful Scripts
+| Command | What it does |
+|---------|--------------|
+| `npm run dev` | Start dev server with reload |
+| `npm run build` | Create production build |
+| `npm start` | Run built version |
+| `npm run migrate` | Apply migrations in prod/test |
+| `npm run migrate:dev` | Dev migration workflow |
+| `npm run lint` | Lint codebase |
+| `npm run format` | Format with Prettier |
+
+## 🗂️ Folder Structure
+```
+clockwise-backend/
+├── src/
+│   ├── app.ts          # Fastify factory
+│   ├── server.ts       # Entry point
+│   ├── config/         # env & prisma helpers
+│   ├── modules/        # domain modules (users, clock)
+│   ├── middlewares/    # auth, error handler
+│   └── utils/          # helper functions
+├── prisma/             # schema & migrations
+└── tests/              # unit, integration & e2e
 ```
 
----
+## 🔄 Database Migrations
+Prisma migrations are tracked in `prisma/migrations/`.
+```bash
+# generate SQL & apply against DEV DB
+npm run migrate:dev -- --name "init"
 
-## 🎨 Releitura do Protótipo Figma
+# deploy pending migrations (used in Docker/prod)
+npm run migrate
+```
+Inside Docker, the API container runs `prisma migrate deploy` automatically on start-up.
 
-### Análise do Protótipo Original
-- [Link para o protótipo original](https://www.figma.com/file/fQaTM68I4Bi8YnmFzoTNFk/Ilumeo---Teste-Fullstack?node-id=0%3A1&t=Bh49PfFY5sob17t5-1)
+## 🤔 Why two repositories?
+Keeping backend and frontend isolated offers advantages:
 
-### Melhorias Implementadas
-- **UX/UI**: Interface mais intuitiva e moderna
-- **Responsividade**: Design mobile-first
-- **Acessibilidade**: Contraste e navegação melhorados
-- **Performance**: Carregamento otimizado
+1. Scalability & autonomy – each service can evolve independently, have its own release cycle and CI pipeline. Teams focused on API or UI don't block each other.
+2. Clear ownership – issues, PRs and security settings are scoped to their respective domain.
+3. Lighter clones/builds – contributors download only what they need.
+4. Easier deployment – we can tag and ship Docker images (`backend-clockwise`, `clockwise-frontend`) separately and roll back one without touching the other.
 
-### Link para Nova Versão
-- [Link para a releitura do protótipo](LINK_PARA_NOVA_VERSAO_FIGMA)
-
----
-
-## 📋 Princípios SOLID Aplicados
-
-### S - Single Responsibility Principle
-- **Controller**: Responsável apenas por receber requests e retornar responses
-- **Service**: Contém apenas a lógica de negócio
-- **Repository**: Responsável apenas pelo acesso a dados
-
-### O - Open/Closed Principle
-- **Módulos**: Abertos para extensão, fechados para modificação
-- **Services**: Novas funcionalidades via composição, não modificação
-
-### L - Liskov Substitution Principle
-- **Repositories**: Implementações podem ser substituídas sem quebrar o código
-- **Services**: Interfaces permitem diferentes implementações
-
-### I - Interface Segregation Principle
-- **Repositories**: Interfaces específicas para cada domínio
-- **Services**: Métodos agrupados por responsabilidade
-
-### D - Dependency Inversion Principle
-- **Injeção de Dependência**: Services dependem de abstrações, não implementações
-- **Inversão de Controle**: Dependências injetadas externamente
+The shared `docker-compose.yml` inside **backend-clockwise** makes local integration trivial: when both repos are placed side-by-side, one command (`docker compose up`) starts the entire stack.
 
 ---
-
-## 🧠 Sobre
-Desenvolvido como parte do teste técnico para a Ilumeo Data Science, aplicando princípios de arquitetura limpa, escalabilidade e organização de código.
-
-### Requisitos Atendidos
-- ✅ React no front-end
-- ✅ Node.js no back-end
-- ✅ TypeScript
-- ✅ Docker
-- ✅ Princípios SOLID
-- ✅ Testes automatizados
-- ✅ ESLint e Prettier
-- ✅ Código limpo e semântico
-- ✅ Responsividade
-- ✅ Conexão com banco de dados
-- ✅ Deploy (Render + Vercel)
-- ✅ Releitura do protótipo Figma
+Made with ♥ for the Ilumeo Data Science challenge.

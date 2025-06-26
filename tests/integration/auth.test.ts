@@ -3,7 +3,6 @@ import { FastifyInstance } from 'fastify'
 import { buildApp } from '../../src/app'
 import prisma from '../../src/config/prisma'
 
-// Emails únicos (timestamp garante unicidade durante a execução)
 const timestamp = Date.now()
 const secondaryEmail = `test_${timestamp}+1@example.com`
 const nonExistentEmail = `test_${timestamp}+2@example.com`
@@ -19,7 +18,6 @@ describe('Auth Module Integration Tests', () => {
   })
 
   afterAll(async () => {
-    // Limpar usuários de teste
     await prisma.user.deleteMany({
       where: {
         email: {
